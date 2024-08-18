@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator & Scanner</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        form { margin-bottom: 20px; }
+        input[type="text"], input[type="file"] { margin-bottom: 10px; }
+        button { padding: 10px 20px; }
+        img { margin-top: 20px; max-width: 100%; }
+        .result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Code Generator & Scanner</h1>
+        
+        <!-- QR Code Generation Form -->
+        <form id="generate-form">
+            <h2>Generate QR Code</h2>
+            <input type="text" id="data" placeholder="Enter data" required>
+            <button type="submit">Generate QR Code</button>
+        </form>
+        <img id="qr-code-img" src="" alt="" style="display: none;">
+
+        <!-- QR Code Scanning Form -->
+        <form id="scan-form" enctype="multipart/form-data">
+            <h2>Scan QR Code</h2>
+            <input type="file" id="file" accept="image/*" required>
+            <button type="submit">Scan QR Code</button>
+        </form>
+        <div id="scan-result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('generate-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = document.getElementById('data').value;
+            const response = await fetch('/generate_qr', {
+                method: 'POST',
+                body: new URLSearchParams({ data }),
+            });
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                document.getElementById('qr-code-img').src = url;
+                document.getElementById('qr-code-img').style.display = 'block';
+            }
+        });
+
+        document.getElementById('scan-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('file');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            const response = await fetch('/scan_qr', {
+                method: 'POST',
+                body: formData,
+            });
+            const resultDiv = document.getElementById('scan-result');
+            if (response.ok) {
+                const result = await response.json();
+                resultDiv.textContent = 'QR Code Data: ' + result.data;
+            } else {
+                const error = await response.json();
+                resultDiv.textContent = 'Error: ' + error.error;
+            }
+        });
+    </script>
+</body>
+</html>

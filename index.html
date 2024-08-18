@@ -34,11 +34,11 @@
         </form>
         <div id="scan-result" class="result"></div>
     </div>
-
-    <script>
-        document.getElementById('generate-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = document.getElementById('data').value;
+<script>
+    document.getElementById('generate-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = document.getElementById('data').value;
+        try {
             const response = await fetch('/generate_qr', {
                 method: 'POST',
                 body: new URLSearchParams({ data }),
@@ -46,16 +46,23 @@
             if (response.ok) {
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
-                document.getElementById('qr-code-img').src = url;
-                document.getElementById('qr-code-img').style.display = 'block';
+                const img = document.getElementById('qr-code-img');
+                img.src = url;
+                img.style.display = 'block';
+            } else {
+                console.error('Error generating QR code:', response.statusText);
             }
-        });
+        } catch (error) {
+            console.error('Fetch error:', error);
+        }
+    });
 
-        document.getElementById('scan-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('file');
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+    document.getElementById('scan-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('file');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        try {
             const response = await fetch('/scan_qr', {
                 method: 'POST',
                 body: formData,
@@ -68,7 +75,11 @@
                 const error = await response.json();
                 resultDiv.textContent = 'Error: ' + error.error;
             }
-        });
-    </script>
+        } catch (error) {
+            console.error('Fetch error:', error);
+        }
+    });
+</script>
+
 </body>
 </html>
